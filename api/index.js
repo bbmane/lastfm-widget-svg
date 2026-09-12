@@ -32,79 +32,84 @@ export default async function handler(req, res) {
     res.status(200).send(`
       <svg width="500" height="130" viewBox="0 0 500 130" xmlns="http://www.w3.org/2000/svg">
         <style>
-          .artist { fill: #121212; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; font-weight: 700; text-anchor: middle; }
-          .track { fill: #121212; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; font-weight: 800; }
           .cover { rx: 8px; }
           
-          /* Marquee SVG nativo pulito */
-          .marquee-group {
-            animation: marquee 10s linear infinite;
-          }
           @keyframes marquee {
-            0% { transform: translateX(0); }
+            0% { transform: translateX(0%); }
             100% { transform: translateX(-50%); }
           }
           
-          /* Equalizzatore esteso su tutta la larghezza */
-          .eq-bar { fill: ${isPlaying ? '#1db954' : '#121212'}; width: 3px; rx: 1.5px; animation: sound 1.2s infinite ease-in-out; }
-          .eq-bar:nth-child(2)  { animation-delay: -0.2s; }
-          .eq-bar:nth-child(3)  { animation-delay: -0.7s; }
-          .eq-bar:nth-child(4)  { animation-delay: -0.4s; }
-          .eq-bar:nth-child(5)  { animation-delay: -0.9s; }
-          .eq-bar:nth-child(6)  { animation-delay: -0.1s; }
-          .eq-bar:nth-child(7)  { animation-delay: -0.6s; }
-          .eq-bar:nth-child(8)  { animation-delay: -0.3s; }
-          .eq-bar:nth-child(9)  { animation-delay: -0.8s; }
-          .eq-bar:nth-child(10) { animation-delay: -0.5s; }
-          .eq-bar:nth-child(11) { animation-delay: -1.0s; }
-          .eq-bar:nth-child(12) { animation-delay: -0.3s; }
-          .eq-bar:nth-child(13) { animation-delay: -0.7s; }
-          .eq-bar:nth-child(14) { animation-delay: -0.2s; }
-          .eq-bar:nth-child(15) { animation-delay: -0.6s; }
-          .eq-bar:nth-child(16) { animation-delay: -0.4s; }
-          .eq-bar:nth-child(17) { animation-delay: -0.9s; }
+          .bar {
+            display: inline-block;
+            width: 3px;
+            margin-right: 2px;
+            background-color: ${isPlaying ? '#1db954' : '#121212'};
+            border-radius: 1.5px;
+            animation: sound 1.2s infinite ease-in-out;
+          }
           
+          .bar:nth-child(2)  { animation-delay: -0.2s; }
+          .bar:nth-child(3)  { animation-delay: -0.7s; }
+          .bar:nth-child(4)  { animation-delay: -0.4s; }
+          .bar:nth-child(5)  { animation-delay: -0.9s; }
+          .bar:nth-child(6)  { animation-delay: -0.1s; }
+          .bar:nth-child(7)  { animation-delay: -0.6s; }
+          .bar:nth-child(8)  { animation-delay: -0.3s; }
+          .bar:nth-child(9)  { animation-delay: -0.8s; }
+          .bar:nth-child(10) { animation-delay: -0.5s; }
+          .bar:nth-child(11) { animation-delay: -1.0s; }
+          .bar:nth-child(12) { animation-delay: -0.3s; }
+          .bar:nth-child(13) { animation-delay: -0.7s; }
+          .bar:nth-child(14) { animation-delay: -0.2s; }
+          .bar:nth-child(15) { animation-delay: -0.6s; }
+          .bar:nth-child(16) { animation-delay: -0.4s; }
+          .bar:nth-child(17) { animation-delay: -0.9s; }
+          .bar:nth-child(18) { animation-delay: -0.5s; }
+          .bar:nth-child(19) { animation-delay: -0.1s; }
+          .bar:nth-child(20) { animation-delay: -0.8s; }
+
           @keyframes sound {
-            0%, 100% { height: 4px; y: 104px; }
-            50% { height: 18px; y: 90px; }
+            0%, 100% { height: 4px; }
+            50% { height: 14px; }
           }
         </style>
-        
-        <!-- Sfondo trasparente -->
-        
-        <!-- Copertina Album a sinistra -->
+
         <image href="${albumArt}" x="12" y="12" width="106" height="106" class="cover" preserveAspectRatio="xMidYMid slice" />
-        
-        <!-- PRIMA RIGA: Nome band al centro (x=305) -->
-        <text x="305" y="32" class="artist">${escapeXml(artistName.toUpperCase())}</text>
-        
-        <!-- SECONDA RIGA: Nome brano che scorre con ClipPath SVG puro -->
-        <svg x="132" y="46" width="355" height="30" overflow="hidden">
-          <g class="marquee-group">
-            <text x="0" y="20" class="track">${escapeXml(trackName)}&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;${escapeXml(trackName)}</text>
-          </g>
-        </svg>
-        
-        <!-- TERZA RIGA: Equalizzatore esteso su tutta la larghezza -->
-        <g transform="translate(132, 0)">
-          <rect x="0"   y="104" class="eq-bar" />
-          <rect x="21"  y="104" class="eq-bar" />
-          <rect x="42"  y="104" class="eq-bar" />
-          <rect x="63"  y="104" class="eq-bar" />
-          <rect x="84"  y="104" class="eq-bar" />
-          <rect x="105" y="104" class="eq-bar" />
-          <rect x="126" y="104" class="eq-bar" />
-          <rect x="147" y="104" class="eq-bar" />
-          <rect x="168" y="104" class="eq-bar" />
-          <rect x="189" y="104" class="eq-bar" />
-          <rect x="210" y="104" class="eq-bar" />
-          <rect x="231" y="104" class="eq-bar" />
-          <rect x="252" y="104" class="eq-bar" />
-          <rect x="273" y="104" class="eq-bar" />
-          <rect x="294" y="104" class="eq-bar" />
-          <rect x="315" y="104" class="eq-bar" />
-          <rect x="336" y="104" class="eq-bar" />
-        </g>
+
+        <foreignObject x="130" y="15" width="355" height="105">
+          <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'; position: relative; height: 100%;">
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'; font-weight: 500; font-size: 16px; text-align: center; margin-bottom: 3px; color: #121212;">${escapeXml(artistName.toUpperCase())}</div>
+            
+            <div style="overflow: hidden; width: 100%; white-space: nowrap; margin-bottom: 28px;">
+              <div style="display: inline-block; white-space: nowrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'; font-size: 15px; color: #121212; animation: marquee 8s linear infinite; padding-right: 40px;">
+                <span>${escapeXml(trackName)}</span><span style="display:inline-block; width: 40px;"></span><span>${escapeXml(trackName)}</span>
+              </div>
+            </div>
+
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'; position: absolute; height: 14px; width: 350px; overflow: hidden; bottom: 10px; left: 0px; white-space: nowrap;">
+              <div class="bar" style="height: 14px;"></div>
+              <div class="bar" style="height: 8px;"></div>
+              <div class="bar" style="height: 12px;"></div>
+              <div class="bar" style="height: 6px;"></div>
+              <div class="bar" style="height: 14px;"></div>
+              <div class="bar" style="height: 10px;"></div>
+              <div class="bar" style="height: 4px;"></div>
+              <div class="bar" style="height: 12px;"></div>
+              <div class="bar" style="height: 14px;"></div>
+              <div class="bar" style="height: 8px;"></div>
+              <div class="bar" style="height: 10px;"></div>
+              <div class="bar" style="height: 14px;"></div>
+              <div class="bar" style="height: 6px;"></div>
+              <div class="bar" style="height: 12px;"></div>
+              <div class="bar" style="height: 9px;"></div>
+              <div class="bar" style="height: 14px;"></div>
+              <div class="bar" style="height: 5px;"></div>
+              <div class="bar" style="height: 11px;"></div>
+              <div class="bar" style="height: 13px;"></div>
+              <div class="bar" style="height: 7px;"></div>
+            </div>
+          </div>
+        </foreignObject>
       </svg>
     `);
   } catch (err) {
