@@ -56,6 +56,10 @@ Before you start, you need:
    ```md
    ![Now playing](https://your-project.vercel.app/api)
    ```
+   or
+   ```md
+   [<img src='https://your-project.vercel.app/api'> ](https://www.last.fm/user/your-username)
+   ```
 
 ## Query parameters (optional)
 
