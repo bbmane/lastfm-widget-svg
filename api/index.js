@@ -32,10 +32,15 @@ export default async function handler(req, res) {
     if (isLastfmPlaceholder(albumArt)) {
       albumArt = await fetchItunesArtwork(rawArtistName, rawTrackName);
     }
-    albumArt = albumArt || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80';
+    if (!albumArt) {
+      albumArt = await fetchDeezerArtwork(rawArtistName, rawTrackName);
+    }
 
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
-    const albumArtBase64 = await toBase64DataUri(albumArt);
+    // If Last.fm, iTunes and Deezer all came up empty, skip fetching a
+    // remote "default" placeholder entirely (one less network call that
+    // could fail) and go straight to the locally generated one.
+    const albumArtBase64 = albumArt ? await toBase64DataUri(albumArt) : fallbackCoverDataUri();
 
     const displayArtist = isPlaying ? artistName : 'Offline';
     const displaySong = isPlaying ? trackName : 'Currently not playing';
@@ -98,6 +103,26 @@ async function fetchItunesArtwork(artist, track) {
   }
 }
 
+// Second fallback: Deezer's search API (public, free, no API key
+// required either). Its catalog doesn't fully overlap with iTunes, so it
+// occasionally finds art for niche/underground artists that Apple's
+// catalog is missing.
+async function fetchDeezerArtwork(artist, track) {
+  try {
+    const query = encodeURIComponent(`${artist} ${track}`);
+    const url = `https://api.deezer.com/search?q=${query}&limit=1`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const result = data.data && data.data[0];
+    const artworkUrl = result && result.album && (result.album.cover_big || result.album.cover_medium);
+    return artworkUrl || null;
+  } catch (err) {
+    return null;
+  }
+}
+
 // Downloads the image and converts it to a data URI, so it ends up
 // embedded directly inside the SVG instead of being an external link
 // (useful for sites like AniList that block images from third-party
@@ -128,6 +153,9 @@ async function toBase64DataUri(url) {
 function fallbackCoverDataUri() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
     <rect width="200" height="200" fill="#e0e0e0"/>
+    <g transform="translate(52,52) scale(4)">
+      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" fill="#a3a3a3"/>
+    </g>
   </svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
