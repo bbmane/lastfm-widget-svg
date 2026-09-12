@@ -22,12 +22,17 @@ export default async function handler(req, res) {
     }
 
     const track = data.recenttracks.track[0];
-    const trackName = escapeXml(track.name || 'Sconosciuto');
-    const artistName = escapeXml(track.artist['#text'] || 'Artista sconosciuto');
+    const rawTrackName = track.name || 'Sconosciuto';
+    const rawArtistName = track.artist['#text'] || 'Artista sconosciuto';
+    const trackName = escapeXml(rawTrackName);
+    const artistName = escapeXml(rawArtistName);
     const trackUrl = track.url || '#';
-    const albumArt =
-      (track.image && track.image[2] && track.image[2]['#text']) ||
-      'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80';
+
+    let albumArt = track.image && track.image[2] && track.image[2]['#text'];
+    if (isLastfmPlaceholder(albumArt)) {
+      albumArt = await fetchItunesArtwork(rawArtistName, rawTrackName);
+    }
+    albumArt = albumArt || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80';
 
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
     const albumArtBase64 = await toBase64DataUri(albumArt);
@@ -61,6 +66,36 @@ export default async function handler(req, res) {
 function toCssColor(value) {
   // Permette sia parole chiave css (transparent, white, ...) sia hex senza #
   return /^[0-9a-fA-F]{3,8}$/.test(value) ? `#${value}` : value;
+}
+
+// Last.fm restituisce spesso questo identico hash come "copertina" quando in
+// realtà non ha nessuna immagine associata alla traccia (capita spesso con
+// scrobble da Bandcamp/SoundCloud/file locali). Va trattato come "nessuna
+// immagine", non come un'immagine valida da mostrare.
+const LASTFM_PLACEHOLDER_HASH = '2a96cbd8b46e442fc41c2b86b821562f';
+
+function isLastfmPlaceholder(url) {
+  return !url || url.includes(LASTFM_PLACEHOLDER_HASH);
+}
+
+// Fallback: se Last.fm non ha la copertina, proviamo a recuperarla da iTunes
+// Search API (pubblica, gratuita, nessuna chiave richiesta).
+async function fetchItunesArtwork(artist, track) {
+  try {
+    const term = encodeURIComponent(`${artist} ${track}`);
+    const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=1`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const artworkUrl = data.results && data.results[0] && data.results[0].artworkUrl100;
+    if (!artworkUrl) return null;
+
+    // artworkUrl100 è 100x100, chiediamo una versione più grande
+    return artworkUrl.replace('100x100bb', '400x400bb');
+  } catch (err) {
+    return null;
+  }
 }
 
 // Scarica l'immagine e la converte in data URI, cosi' finisce "embeddata"
@@ -203,12 +238,10 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           <div class="text-container">
             <div class="artist">${artistName.toUpperCase()}</div>
 
-            <div class="song-container ${isPlaying ? 'animate' : ''}">
+            <div class="song-container animate">
               <div class="song">${trackName}</div>
-              ${isPlaying ? `
               <div class="song" aria-hidden="true">${trackName}</div>
               <div class="song" aria-hidden="true">${trackName}</div>
-              ` : ''}
             </div>
 
             ${isPlaying ? `<div id="bars">${barsHtml}</div>` : ''}
