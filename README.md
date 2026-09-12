@@ -1,6 +1,7 @@
 # Now Playing Widget Based on Last.fm
 
-A tiny serverless function that renders your current Last.fm track as an SVG card — drop it straight into a GitHub
+A lightweight widget, powered by a tiny serverless function, that shows
+your current Last.fm track as an SVG card — drop it straight into a GitHub
 profile README, a personal site, or anywhere else that accepts an
 image URL (e.g. AniList).
 
