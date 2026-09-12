@@ -36,7 +36,6 @@ export default async function handler(req, res) {
           .track { fill: #121212; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; font-weight: 800; }
           .cover { rx: 8px; }
           
-          /* Animazione scorrimento (marquee) per il brano */
           .marquee {
             animation: scroll 8s linear infinite;
           }
@@ -45,7 +44,6 @@ export default async function handler(req, res) {
             100% { transform: translateX(-50%); }
           }
           
-          /* Equalizzatore */
           .eq-bar { fill: ${isPlaying ? '#1db954' : '#121212'}; width: 3px; rx: 1.5px; animation: sound 1.2s infinite ease-in-out; }
           .eq-bar:nth-child(2) { animation-delay: -0.4s; }
           .eq-bar:nth-child(3) { animation-delay: -0.8s; }
@@ -61,27 +59,21 @@ export default async function handler(req, res) {
           }
         </style>
         
-        <!-- Sfondo trasparente (nessun <rect> di riempimento) -->
-        
-        <!-- Copertina Album a sinistra -->
         <image href="${albumArt}" x="12" y="12" width="106" height="106" class="cover" preserveAspectRatio="xMidYMid slice" />
         
-        <!-- PRIMA RIGA: Nome Band al centro rispetto allo spazio rimanente (circa x=305) -->
         <text x="305" y="32" class="artist">${escapeXml(artistName.toUpperCase())}</text>
         
-        <!-- SECONDA RIGA: Nome brano che scorre (usiamo un gruppo con clip-path per mascherare il testo lungo) -->
         <svg x="135" y="50" width="345" height="30">
           <clipPath id="text-clip">
             <rect width="345" height="30" rx="4" />
           </clipPath>
           <g clip-path="url(#text-clip)">
             <text x="0" y="22" class="track">
-              <tspan class="marquee">${escapeXml(trackName)}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${escapeXml(trackName)}</tspan>
+              <tspan class="marquee">${escapeXml(trackName)}&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;${escapeXml(trackName)}</tspan>
             </text>
           </g>
         </svg>
         
-        <!-- TERZA RIGA: Equalizzatore in basso a destra -->
         <g transform="translate(135, 0)">
           <rect x="0" y="98" class="eq-bar" />
           <rect x="6" y="98" class="eq-bar" />
@@ -93,7 +85,6 @@ export default async function handler(req, res) {
           <rect x="42" y="98" class="eq-bar" />
         </g>
         
-        <!-- Stato live minuscolo -->
         <text x="480" y="112" fill="${isPlaying ? '#1db954' : '#888'}" font-family="sans-serif" font-size="9" text-anchor="end">${isPlaying ? '● LIVE' : '○ RECENT'}</text>
       </svg>
     `);
