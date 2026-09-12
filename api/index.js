@@ -2,13 +2,13 @@ export default async function handler(req, res) {
   const username = req.query.username || process.env.LASTFM_USERNAME;
   const apiKey = req.query.api_key || process.env.LASTFM_API_KEY;
 
-  // Parametri opzionali di personalizzazione, sullo stile di kittinan
+  // Optional customization parameters, kittinan-style
   const backgroundColor = req.query.background_color || 'transparent';
   const borderRadius = req.query.border_radius || '12';
-  const barColor = req.query.bar_color || 'B3B3B3'; // grigio, sempre lo stesso
+  const barColor = req.query.bar_color || 'B3B3B3'; // grey, always the same
 
   if (!username || !apiKey) {
-    return sendErrorSvg(res, 'Parametri mancanti', backgroundColor, borderRadius);
+    return sendErrorSvg(res, 'Missing parameters', backgroundColor, borderRadius);
   }
 
   try {
@@ -18,12 +18,12 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!data.recenttracks || !data.recenttracks.track || data.recenttracks.track.length === 0) {
-      throw new Error('Nessuna traccia');
+      throw new Error('No track found');
     }
 
     const track = data.recenttracks.track[0];
-    const rawTrackName = track.name || 'Sconosciuto';
-    const rawArtistName = track.artist['#text'] || 'Artista sconosciuto';
+    const rawTrackName = track.name || 'Unknown';
+    const rawArtistName = track.artist['#text'] || 'Unknown artist';
     const trackName = escapeXml(rawTrackName);
     const artistName = escapeXml(rawArtistName);
     const trackUrl = track.url || '#';
@@ -59,27 +59,27 @@ export default async function handler(req, res) {
       isPlaying,
     }));
   } catch (err) {
-    sendErrorSvg(res, 'Nessuna traccia', backgroundColor, borderRadius);
+    sendErrorSvg(res, 'No track found', backgroundColor, borderRadius);
   }
 }
 
 function toCssColor(value) {
-  // Permette sia parole chiave css (transparent, white, ...) sia hex senza #
+  // Accepts both CSS keywords (transparent, white, ...) and hex without #
   return /^[0-9a-fA-F]{3,8}$/.test(value) ? `#${value}` : value;
 }
 
-// Last.fm restituisce spesso questo identico hash come "copertina" quando in
-// realtà non ha nessuna immagine associata alla traccia (capita spesso con
-// scrobble da Bandcamp/SoundCloud/file locali). Va trattato come "nessuna
-// immagine", non come un'immagine valida da mostrare.
+// Last.fm often returns this exact hash as the "cover art" when the track
+// actually has no image associated with it (very common with scrobbles
+// from Bandcamp/SoundCloud/local files). It should be treated as "no
+// image", not as a valid image to display.
 const LASTFM_PLACEHOLDER_HASH = '2a96cbd8b46e442fc41c2b86b821562f';
 
 function isLastfmPlaceholder(url) {
   return !url || url.includes(LASTFM_PLACEHOLDER_HASH);
 }
 
-// Fallback: se Last.fm non ha la copertina, proviamo a recuperarla da iTunes
-// Search API (pubblica, gratuita, nessuna chiave richiesta).
+// Fallback: if Last.fm has no real cover, try to fetch one from the
+// iTunes Search API (public, free, no API key required).
 async function fetchItunesArtwork(artist, track) {
   try {
     const term = encodeURIComponent(`${artist} ${track}`);
@@ -91,19 +91,20 @@ async function fetchItunesArtwork(artist, track) {
     const artworkUrl = data.results && data.results[0] && data.results[0].artworkUrl100;
     if (!artworkUrl) return null;
 
-    // artworkUrl100 è 100x100, chiediamo una versione più grande
+    // artworkUrl100 is 100x100, ask for a bigger version
     return artworkUrl.replace('100x100bb', '400x400bb');
   } catch (err) {
     return null;
   }
 }
 
-// Scarica l'immagine e la converte in data URI, cosi' finisce "embeddata"
-// dentro l'SVG stesso invece di essere un link esterno (utile per siti come
-// AniList che bloccano il caricamento di immagini da domini terzi).
+// Downloads the image and converts it to a data URI, so it ends up
+// embedded directly inside the SVG instead of being an external link
+// (useful for sites like AniList that block images from third-party
+// domains).
 async function toBase64DataUri(url) {
   try {
-    if (!url) throw new Error('URL vuoto');
+    if (!url) throw new Error('Empty URL');
 
     const imgResponse = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LastfmWidget/1.0)' },
@@ -112,13 +113,14 @@ async function toBase64DataUri(url) {
     if (!imgResponse.ok) throw new Error(`HTTP ${imgResponse.status}`);
 
     const contentType = imgResponse.headers.get('content-type') || '';
-    if (!contentType.startsWith('image/')) throw new Error('La risposta non è un\'immagine');
+    if (!contentType.startsWith('image/')) throw new Error('Response is not an image');
 
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
     return `data:${contentType};base64,${buffer.toString('base64')}`;
   } catch (err) {
-    // Fetch fallito o contenuto non valido: niente icona rotta, un placeholder
-    // grigio generato localmente (nessuna rete coinvolta, non può mai fallire).
+    // Fetch failed or invalid content: no broken icon, a locally
+    // generated grey placeholder instead (no network involved, can
+    // never fail).
     return fallbackCoverDataUri();
   }
 }
@@ -252,8 +254,8 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
   `;
 }
 
-// Genera N barre con delay/durata leggermente randomizzati per un effetto
-// equalizzatore naturale, invece delle 20 barre fisse dell'originale.
+// Generates N bars with slightly randomized delay/duration for a more
+// natural-looking equalizer effect, instead of a fixed set of bars.
 function generateBars(count) {
   let bars = '';
   for (let i = 0; i < count; i++) {
