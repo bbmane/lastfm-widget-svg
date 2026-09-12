@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   // Parametri opzionali di personalizzazione, sullo stile di kittinan
   const backgroundColor = req.query.background_color || 'transparent';
   const borderRadius = req.query.border_radius || '12';
-  const barColor = req.query.bar_color || '1DB954'; // verde Spotify
+  const barColor = req.query.bar_color || 'B3B3B3'; // grigio, sempre lo stesso
 
   if (!username || !apiKey) {
     return sendErrorSvg(res, 'Parametri mancanti', backgroundColor, borderRadius);
@@ -103,7 +103,7 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           }
 
           .artist {
-            color: #121212;
+            color: #6a6a6a;
             font-weight: 700;
             font-size: 15px;
             line-height: 1.2;
@@ -111,13 +111,13 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-align: center;
           }
 
           .song-container {
             display: flex;
-            overflow: hidden;
             white-space: nowrap;
-            width: 100%;
+            width: max-content;
             margin-bottom: 12px;
           }
 
@@ -149,7 +149,7 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           .bar {
             width: 3px;
             border-radius: 1.5px;
-            background-color: ${isPlaying ? `#${barColor}` : '#c7c7c7'};
+            background-color: ${toCssColor(barColor)};
             animation: sound 1.1s ease-in-out infinite alternate;
             animation-play-state: ${isPlaying ? 'running' : 'paused'};
           }
