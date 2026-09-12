@@ -32,6 +32,9 @@ export default async function handler(req, res) {
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
     const albumArtBase64 = await toBase64DataUri(albumArt);
 
+    const displayArtist = isPlaying ? artistName : 'Offline';
+    const displaySong = isPlaying ? trackName : 'Currently not playing';
+
     const width = 460;
     const height = 140;
 
@@ -45,8 +48,8 @@ export default async function handler(req, res) {
       borderRadius,
       barColor,
       albumArt: albumArtBase64,
-      artistName,
-      trackName,
+      artistName: displayArtist,
+      trackName: displaySong,
       trackUrl,
       isPlaying,
     }));
@@ -65,14 +68,31 @@ function toCssColor(value) {
 // AniList che bloccano il caricamento di immagini da domini terzi).
 async function toBase64DataUri(url) {
   try {
-    const imgResponse = await fetch(url);
-    const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+    if (!url) throw new Error('URL vuoto');
+
+    const imgResponse = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; LastfmWidget/1.0)' },
+    });
+
+    if (!imgResponse.ok) throw new Error(`HTTP ${imgResponse.status}`);
+
+    const contentType = imgResponse.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) throw new Error('La risposta non è un\'immagine');
+
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
     return `data:${contentType};base64,${buffer.toString('base64')}`;
   } catch (err) {
-    // Se il fetch dell'immagine fallisce, niente cover invece di rompere tutto
-    return '';
+    // Fetch fallito o contenuto non valido: niente icona rotta, un placeholder
+    // grigio generato localmente (nessuna rete coinvolta, non può mai fallire).
+    return fallbackCoverDataUri();
   }
+}
+
+function fallbackCoverDataUri() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+    <rect width="200" height="200" fill="#e0e0e0"/>
+  </svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
 function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albumArt, artistName, trackName, trackUrl, isPlaying }) {
@@ -183,13 +203,15 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           <div class="text-container">
             <div class="artist">${artistName.toUpperCase()}</div>
 
-            <div class="song-container animate">
+            <div class="song-container ${isPlaying ? 'animate' : ''}">
               <div class="song">${trackName}</div>
+              ${isPlaying ? `
               <div class="song" aria-hidden="true">${trackName}</div>
               <div class="song" aria-hidden="true">${trackName}</div>
+              ` : ''}
             </div>
 
-            <div id="bars">${barsHtml}</div>
+            ${isPlaying ? `<div id="bars">${barsHtml}</div>` : ''}
           </div>
         </div>
       </foreignObject>
