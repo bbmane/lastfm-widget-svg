@@ -30,9 +30,10 @@ export default async function handler(req, res) {
       'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80';
 
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
+    const albumArtBase64 = await toBase64DataUri(albumArt);
 
-    const width = 340;
-    const height = 100;
+    const width = 460;
+    const height = 140;
 
     res.setHeader('Content-Type', 'image/svg+xml');
     res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=30');
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
       backgroundColor,
       borderRadius,
       barColor,
-      albumArt,
+      albumArt: albumArtBase64,
       artistName,
       trackName,
       trackUrl,
@@ -59,8 +60,23 @@ function toCssColor(value) {
   return /^[0-9a-fA-F]{3,8}$/.test(value) ? `#${value}` : value;
 }
 
+// Scarica l'immagine e la converte in data URI, cosi' finisce "embeddata"
+// dentro l'SVG stesso invece di essere un link esterno (utile per siti come
+// AniList che bloccano il caricamento di immagini da domini terzi).
+async function toBase64DataUri(url) {
+  try {
+    const imgResponse = await fetch(url);
+    const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+    const buffer = Buffer.from(await imgResponse.arrayBuffer());
+    return `data:${contentType};base64,${buffer.toString('base64')}`;
+  } catch (err) {
+    // Se il fetch dell'immagine fallisce, niente cover invece di rompere tutto
+    return '';
+  }
+}
+
 function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albumArt, artistName, trackName, trackUrl, isPlaying }) {
-  const coverSize = 68;
+  const coverSize = 100;
   const barsHtml = generateBars(60);
   const bgColor = toCssColor(backgroundColor);
 
@@ -91,9 +107,8 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           .cover {
             width: ${coverSize}px;
             height: ${coverSize}px;
-            border-radius: 8px;
             object-fit: cover;
-            margin-right: 14px;
+            margin-right: 20px;
           }
 
           .text-container {
@@ -105,9 +120,9 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           .artist {
             color: #6a6a6a;
             font-weight: 700;
-            font-size: 15px;
-            line-height: 1.2;
-            margin-bottom: 4px;
+            font-size: 20px;
+            line-height: 1.3;
+            margin-bottom: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -118,7 +133,7 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
             display: flex;
             white-space: nowrap;
             width: max-content;
-            margin-bottom: 12px;
+            margin-bottom: 18px;
           }
 
           .song-container.animate {
@@ -127,9 +142,9 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
 
           .song {
             color: #6a6a6a;
-            font-size: 13px;
+            font-size: 17px;
             flex: 0 0 auto;
-            padding-right: 36px;
+            padding-right: 48px;
           }
 
           @keyframes marquee {
@@ -140,23 +155,23 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           #bars {
             display: flex;
             align-items: flex-end;
-            height: 14px;
+            height: 22px;
             width: 100%;
             overflow: hidden;
-            gap: 2px;
+            gap: 3px;
           }
 
           .bar {
-            width: 3px;
-            border-radius: 1.5px;
+            width: 4px;
+            border-radius: 2px;
             background-color: ${toCssColor(barColor)};
             animation: sound 1.1s ease-in-out infinite alternate;
             animation-play-state: ${isPlaying ? 'running' : 'paused'};
           }
 
           @keyframes sound {
-            0%   { height: 3px; }
-            100% { height: 14px; }
+            0%   { height: 4px; }
+            100% { height: 22px; }
           }
         </style>
 
