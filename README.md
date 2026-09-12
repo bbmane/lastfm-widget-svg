@@ -21,7 +21,7 @@ but built for Last.fm, so it can catch and show music playing from Spotify, Band
 
 ## Live example
  
-![Now playing](https://lastfm-widget-svg.vercel.app/api)
+[<img src='https://lastfm-widget-svg.vercel.app/api'> ](https://www.last.fm/user/bbmane)
 
 ## Prerequisites
  
