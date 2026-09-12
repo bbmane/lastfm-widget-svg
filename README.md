@@ -6,11 +6,11 @@ profile README, a personal site, or anywhere else that accepts an
 image URL.
 
 Inspired by [kittinan/spotify-github-profile](https://github.com/kittinan/spotify-github-profile),
-but built for Last.fm.
+but built for Last.fm, so I can catch and show music playing from Spotify, Bandcamp, Youtube, etc.
 
 ## Features
 
-- The style is entirely based on the Novatorem theme made by kittinan: the widget shows artist, track title (scrolling marquee) and an animated equalizer
+- The style is entirely based on the Novatorem theme made by [kittinan](https://github.com/kittinan): the widget shows artist, track title (scrolling marquee) and an animated equalizer
 - Falls back to a clean "Offline / Currently not playing" state when
   nothing is playing
 - Album art is embedded as base64 directly inside the SVG, so it still
@@ -23,12 +23,6 @@ but built for Last.fm.
 ## Live example
  
 ![Now playing](https://lastfm-widget-svg.vercel.app/api)
- 
-Markdown to copy:
- 
-```md
-![Now playing](https://your-project.vercel.app/api)
-```
 
 ## Setup
 
@@ -60,16 +54,9 @@ These are only useful if you want to override something on the fly.
 | Parameter          | Default       | Description                                            |
 |---------------------|---------------|--------------------------------------------------------|
 | `username`          | env var       | Last.fm username to look up                             |
-| `api_key`           | env var       | Last.fm API key                                          |
 | `background_color`  | `transparent` | Hex without `#` (e.g. `121212`) or a CSS keyword         |
 | `border_radius`     | `12`          | Card corner radius in px                                 |
 | `bar_color`         | `B3B3B3`      | Hex without `#` for the equalizer bars                   |
-
-> [!WARNING]  
-> Avoid passing `api_key` as a query parameter in a public README — it
-> would expose your key to anyone who views the page source. Use the
-> environment variable instead; it's only there as an escape hatch for
-> local testing.
 
 ## Local development
 
