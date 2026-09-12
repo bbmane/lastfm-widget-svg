@@ -24,20 +24,18 @@ export default async function handler(req, res) {
     const track = data.recenttracks.track[0];
     const rawTrackName = track.name || 'Unknown';
     const rawArtistName = track.artist['#text'] || 'Unknown artist';
+    const rawAlbumName = (track.album && track.album['#text']) || '';
     const trackName = escapeXml(rawTrackName);
     const artistName = escapeXml(rawArtistName);
     const trackUrl = track.url || '#';
 
     let albumArt = track.image && track.image[2] && track.image[2]['#text'];
     if (isLastfmPlaceholder(albumArt)) {
-      albumArt = await fetchItunesArtwork(rawArtistName, rawTrackName);
-    }
-    if (!albumArt) {
-      albumArt = await fetchDeezerArtwork(rawArtistName, rawTrackName);
+      albumArt = await findArtwork(rawArtistName, rawTrackName, rawAlbumName);
     }
 
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
-    // If Last.fm, iTunes and Deezer all came up empty, skip fetching a
+    // If none of the artwork lookups found anything, skip fetching a
     // remote "default" placeholder entirely (one less network call that
     // could fail) and go straight to the locally generated one.
     const albumArtBase64 = albumArt ? await toBase64DataUri(albumArt) : fallbackCoverDataUri();
@@ -83,12 +81,22 @@ function isLastfmPlaceholder(url) {
   return !url || url.includes(LASTFM_PLACEHOLDER_HASH);
 }
 
+// Store catalogs often list a track without the "(feat. X)" / "[Remix]"
+// style annotations that Last.fm keeps, so searching with the raw title
+// can miss an otherwise perfectly findable track. Stripping that out
+// before searching noticeably improves the hit rate.
+function cleanForSearch(title) {
+  return title
+    .replace(/[([][^)\]]*\b(feat\.?|ft\.?|with)\b[^)\]]*[)\]]/gi, '')
+    .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
+    .trim();
+}
+
 // Fallback: if Last.fm has no real cover, try to fetch one from the
 // iTunes Search API (public, free, no API key required).
-async function fetchItunesArtwork(artist, track) {
+async function fetchItunesArtwork(query, entity = 'song') {
   try {
-    const term = encodeURIComponent(`${artist} ${track}`);
-    const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=1`;
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=${entity}&limit=1`;
     const response = await fetch(url);
     if (!response.ok) return null;
 
@@ -103,24 +111,49 @@ async function fetchItunesArtwork(artist, track) {
   }
 }
 
-// Second fallback: Deezer's search API (public, free, no API key
-// required either). Its catalog doesn't fully overlap with iTunes, so it
+// Second source: Deezer's search API (public, free, no API key required
+// either). Its catalog doesn't fully overlap with iTunes, so it
 // occasionally finds art for niche/underground artists that Apple's
 // catalog is missing.
-async function fetchDeezerArtwork(artist, track) {
+async function fetchDeezerArtwork(query, type = 'track') {
   try {
-    const query = encodeURIComponent(`${artist} ${track}`);
-    const url = `https://api.deezer.com/search?q=${query}&limit=1`;
+    const url = `https://api.deezer.com/search/${type}?q=${encodeURIComponent(query)}&limit=1`;
     const response = await fetch(url);
     if (!response.ok) return null;
 
     const data = await response.json();
     const result = data.data && data.data[0];
-    const artworkUrl = result && result.album && (result.album.cover_big || result.album.cover_medium);
+    if (!result) return null;
+
+    const artworkUrl = type === 'album'
+      ? result.cover_big || result.cover_medium
+      : result.album && (result.album.cover_big || result.album.cover_medium);
     return artworkUrl || null;
   } catch (err) {
     return null;
   }
+}
+
+// Tries, in order: iTunes and Deezer by track title, then — if the track
+// itself has no match — iTunes and Deezer by album name (Last.fm often
+// knows the album even when the track has no artwork, and album-level
+// search succeeds more often for obscure/underground artists).
+async function findArtwork(artist, track, album) {
+  const cleanTrack = cleanForSearch(track);
+
+  const byTrack =
+    (await fetchItunesArtwork(`${artist} ${cleanTrack}`, 'song')) ||
+    (await fetchDeezerArtwork(`${artist} ${cleanTrack}`, 'track'));
+  if (byTrack) return byTrack;
+
+  if (album) {
+    const byAlbum =
+      (await fetchItunesArtwork(`${artist} ${album}`, 'album')) ||
+      (await fetchDeezerArtwork(`${artist} ${album}`, 'album'));
+    if (byAlbum) return byAlbum;
+  }
+
+  return null;
 }
 
 // Downloads the image and converts it to a data URI, so it ends up
@@ -266,7 +299,7 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           </a>
 
           <div class="text-container">
-            <div class="artist">${artistName.toUpperCase()}</div>
+            <div class="artist">${artistName}</div>
 
             <div class="song-container animate">
               <div class="song">${trackName}</div>
