@@ -36,19 +36,13 @@ export default async function handler(req, res) {
           .track { fill: #121212; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; font-weight: 800; }
           .cover { rx: 8px; }
           
-          /* Animazione marquee fluida */
-          .marquee-container {
-            overflow: hidden;
-            width: 350px;
-          }
-          .marquee-text {
-            display: inline-block;
-            white-space: nowrap;
-            animation: marquee 9s linear infinite;
+          /* Marquee SVG nativo pulito */
+          .marquee-group {
+            animation: marquee 10s linear infinite;
           }
           @keyframes marquee {
-            0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-50%, 0, 0); }
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
           }
           
           /* Equalizzatore esteso su tutta la larghezza */
@@ -76,24 +70,22 @@ export default async function handler(req, res) {
           }
         </style>
         
+        <!-- Sfondo trasparente -->
+        
         <!-- Copertina Album a sinistra -->
         <image href="${albumArt}" x="12" y="12" width="106" height="106" class="cover" preserveAspectRatio="xMidYMid slice" />
         
         <!-- PRIMA RIGA: Nome band al centro (x=305) -->
         <text x="305" y="32" class="artist">${escapeXml(artistName.toUpperCase())}</text>
         
-        <!-- SECONDA RIGA: Nome brano che scorre pulito -->
-        <foreignObject x="132" y="48" width="355" height="30">
-          <div xmlns="http://www.w3.org/1999/xhtml" class="marquee-container">
-            <div class="marquee-text">
-              <span class="track">${escapeXml(trackName)}</span>
-              <span class="track">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-              <span class="track">${escapeXml(trackName)}</span>
-            </div>
-          </div>
-        </foreignObject>
+        <!-- SECONDA RIGA: Nome brano che scorre con ClipPath SVG puro -->
+        <svg x="132" y="46" width="355" height="30" overflow="hidden">
+          <g class="marquee-group">
+            <text x="0" y="20" class="track">${escapeXml(trackName)}&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;${escapeXml(trackName)}</text>
+          </g>
+        </svg>
         
-        <!-- TERZA RIGA: Equalizzatore esteso su tutta la larghezza utile (da x=132 a x=480) -->
+        <!-- TERZA RIGA: Equalizzatore esteso su tutta la larghezza -->
         <g transform="translate(132, 0)">
           <rect x="0"   y="104" class="eq-bar" />
           <rect x="21"  y="104" class="eq-bar" />
