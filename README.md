@@ -62,7 +62,7 @@ Before you start, you need:
    [<img src='https://your-project.vercel.app/api'> ](https://www.last.fm/user/your-username)
    ```
 
-## Query parameters (optional)
+## (Optional) Query parameters
 
 All of these are optional — set the env vars above and you're done.
 These are only useful if you want to override something on the fly.
@@ -74,7 +74,7 @@ These are only useful if you want to override something on the fly.
 | `border_radius`     | `12`          | Card corner radius in px                                 |
 | `bar_color`         | `B3B3B3`      | Hex without `#` for the equalizer bars                   |
 
-## Local development
+## (Optional) Local development
 
 ```bash
 npm i -g vercel
@@ -83,7 +83,3 @@ vercel dev
 
 Then create a `.env.local` file with `LASTFM_USERNAME` and `LASTFM_API_KEY`,
 and open `http://localhost:3000/api` in your browser.
-
-## License
-
-GPL-3.0 — see [LICENSE](./LICENSE).
