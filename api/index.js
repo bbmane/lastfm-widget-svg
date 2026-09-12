@@ -30,15 +30,29 @@ export default async function handler(req, res) {
     const trackUrl = track.url || '#';
 
     let albumArt = track.image && track.image[2] && track.image[2]['#text'];
-    if (isLastfmPlaceholder(albumArt)) {
-      albumArt = await findArtwork(rawArtistName, rawTrackName, rawAlbumName);
+    let albumArtBase64 = null;
+
+    if (!isLastfmPlaceholder(albumArt)) {
+      albumArtBase64 = await toBase64DataUri(albumArt);
+    }
+
+    // Either Last.fm had no image at all, or it gave us a URL that looked
+    // valid but failed to actually download (404, broken CDN entry, etc.)
+    // — either way, try the search fallbacks before giving up.
+    if (!albumArtBase64) {
+      const foundArt = await findArtwork(rawArtistName, rawTrackName, rawAlbumName);
+      if (foundArt) {
+        albumArtBase64 = await toBase64DataUri(foundArt);
+      }
+    }
+
+    // Nothing worked: locally generated placeholder (no network involved,
+    // can never fail).
+    if (!albumArtBase64) {
+      albumArtBase64 = fallbackCoverDataUri();
     }
 
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
-    // If none of the artwork lookups found anything, skip fetching a
-    // remote "default" placeholder entirely (one less network call that
-    // could fail) and go straight to the locally generated one.
-    const albumArtBase64 = albumArt ? await toBase64DataUri(albumArt) : fallbackCoverDataUri();
 
     const displayArtist = isPlaying ? artistName : 'Offline';
     const displaySong = isPlaying ? trackName : 'Currently not playing';
@@ -190,10 +204,8 @@ async function toBase64DataUri(url) {
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
     return `data:${contentType};base64,${buffer.toString('base64')}`;
   } catch (err) {
-    // Fetch failed or invalid content: no broken icon, a locally
-    // generated grey placeholder instead (no network involved, can
-    // never fail).
-    return fallbackCoverDataUri();
+    console.warn(`[Cover download] Failed for "${url}":`, err.message);
+    return null;
   }
 }
 
