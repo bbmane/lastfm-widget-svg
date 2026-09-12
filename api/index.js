@@ -36,56 +36,83 @@ export default async function handler(req, res) {
           .track { fill: #121212; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; font-weight: 800; }
           .cover { rx: 8px; }
           
-          .marquee {
-            animation: scroll 8s linear infinite;
+          /* Animazione marquee fluida */
+          .marquee-container {
+            overflow: hidden;
+            width: 350px;
           }
-          @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+          .marquee-text {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 9s linear infinite;
+          }
+          @keyframes marquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
           }
           
+          /* Equalizzatore esteso su tutta la larghezza */
           .eq-bar { fill: ${isPlaying ? '#1db954' : '#121212'}; width: 3px; rx: 1.5px; animation: sound 1.2s infinite ease-in-out; }
-          .eq-bar:nth-child(2) { animation-delay: -0.4s; }
-          .eq-bar:nth-child(3) { animation-delay: -0.8s; }
-          .eq-bar:nth-child(4) { animation-delay: -0.2s; }
-          .eq-bar:nth-child(5) { animation-delay: -0.6s; }
-          .eq-bar:nth-child(6) { animation-delay: -1.0s; }
-          .eq-bar:nth-child(7) { animation-delay: -0.3s; }
-          .eq-bar:nth-child(8) { animation-delay: -0.7s; }
+          .eq-bar:nth-child(2)  { animation-delay: -0.2s; }
+          .eq-bar:nth-child(3)  { animation-delay: -0.7s; }
+          .eq-bar:nth-child(4)  { animation-delay: -0.4s; }
+          .eq-bar:nth-child(5)  { animation-delay: -0.9s; }
+          .eq-bar:nth-child(6)  { animation-delay: -0.1s; }
+          .eq-bar:nth-child(7)  { animation-delay: -0.6s; }
+          .eq-bar:nth-child(8)  { animation-delay: -0.3s; }
+          .eq-bar:nth-child(9)  { animation-delay: -0.8s; }
+          .eq-bar:nth-child(10) { animation-delay: -0.5s; }
+          .eq-bar:nth-child(11) { animation-delay: -1.0s; }
+          .eq-bar:nth-child(12) { animation-delay: -0.3s; }
+          .eq-bar:nth-child(13) { animation-delay: -0.7s; }
+          .eq-bar:nth-child(14) { animation-delay: -0.2s; }
+          .eq-bar:nth-child(15) { animation-delay: -0.6s; }
+          .eq-bar:nth-child(16) { animation-delay: -0.4s; }
+          .eq-bar:nth-child(17) { animation-delay: -0.9s; }
           
           @keyframes sound {
-            0%, 100% { height: 4px; y: 98px; }
-            50% { height: 18px; y: 84px; }
+            0%, 100% { height: 4px; y: 104px; }
+            50% { height: 18px; y: 90px; }
           }
         </style>
         
+        <!-- Copertina Album a sinistra -->
         <image href="${albumArt}" x="12" y="12" width="106" height="106" class="cover" preserveAspectRatio="xMidYMid slice" />
         
+        <!-- PRIMA RIGA: Nome band al centro (x=305) -->
         <text x="305" y="32" class="artist">${escapeXml(artistName.toUpperCase())}</text>
         
-        <svg x="135" y="50" width="345" height="30">
-          <clipPath id="text-clip">
-            <rect width="345" height="30" rx="4" />
-          </clipPath>
-          <g clip-path="url(#text-clip)">
-            <text x="0" y="22" class="track">
-              <tspan class="marquee">${escapeXml(trackName)}&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;${escapeXml(trackName)}</tspan>
-            </text>
-          </g>
-        </svg>
+        <!-- SECONDA RIGA: Nome brano che scorre pulito -->
+        <foreignObject x="132" y="48" width="355" height="30">
+          <div xmlns="http://www.w3.org/1999/xhtml" class="marquee-container">
+            <div class="marquee-text">
+              <span class="track">${escapeXml(trackName)}</span>
+              <span class="track">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+              <span class="track">${escapeXml(trackName)}</span>
+            </div>
+          </div>
+        </foreignObject>
         
-        <g transform="translate(135, 0)">
-          <rect x="0" y="98" class="eq-bar" />
-          <rect x="6" y="98" class="eq-bar" />
-          <rect x="12" y="98" class="eq-bar" />
-          <rect x="18" y="98" class="eq-bar" />
-          <rect x="24" y="98" class="eq-bar" />
-          <rect x="30" y="98" class="eq-bar" />
-          <rect x="36" y="98" class="eq-bar" />
-          <rect x="42" y="98" class="eq-bar" />
+        <!-- TERZA RIGA: Equalizzatore esteso su tutta la larghezza utile (da x=132 a x=480) -->
+        <g transform="translate(132, 0)">
+          <rect x="0"   y="104" class="eq-bar" />
+          <rect x="21"  y="104" class="eq-bar" />
+          <rect x="42"  y="104" class="eq-bar" />
+          <rect x="63"  y="104" class="eq-bar" />
+          <rect x="84"  y="104" class="eq-bar" />
+          <rect x="105" y="104" class="eq-bar" />
+          <rect x="126" y="104" class="eq-bar" />
+          <rect x="147" y="104" class="eq-bar" />
+          <rect x="168" y="104" class="eq-bar" />
+          <rect x="189" y="104" class="eq-bar" />
+          <rect x="210" y="104" class="eq-bar" />
+          <rect x="231" y="104" class="eq-bar" />
+          <rect x="252" y="104" class="eq-bar" />
+          <rect x="273" y="104" class="eq-bar" />
+          <rect x="294" y="104" class="eq-bar" />
+          <rect x="315" y="104" class="eq-bar" />
+          <rect x="336" y="104" class="eq-bar" />
         </g>
-        
-        <text x="480" y="112" fill="${isPlaying ? '#1db954' : '#888'}" font-family="sans-serif" font-size="9" text-anchor="end">${isPlaying ? '● LIVE' : '○ RECENT'}</text>
       </svg>
     `);
   } catch (err) {
