@@ -2,7 +2,7 @@
 
 A tiny serverless function that renders your current Last.fm track as an SVG card — drop it straight into a GitHub
 profile README, a personal site, or anywhere else that accepts an
-image URL.
+image URL (e.g. AniList).
 
 Inspired by [kittinan/spotify-github-profile](https://github.com/kittinan/spotify-github-profile),
 but built for Last.fm, so it can catch and show music playing from Spotify, Bandcamp, Youtube, etc.
@@ -23,15 +23,27 @@ but built for Last.fm, so it can catch and show music playing from Spotify, Band
  
 ![Now playing](https://lastfm-widget-svg.vercel.app/api)
 
+## Prerequisites
+ 
+Before you start, you need:
+ 
+- A [Last.fm](https://www.last.fm/) account
+- A scrobbler connected to it, so it actually knows what you're
+  listening to — e.g. the [official Last.fm web/desktop app](https://www.last.fm/about/trackmymusic),
+  the great [web browser extension](https://github.com/web-scrobbler), a mobile scrobbler app, or all of these lol
+- A Last.fm API key — create one for free at
+   [last.fm/api/account/create](https://www.last.fm/api/account/create)
+- A [GitHub](https://github.com) account, to fork this repo
+- A free [Vercel](https://vercel.com/signup) account, to host the widget
+- (Optional, for local development only) [Node.js](https://nodejs.org/) and the [Vercel CLI](https://vercel.com/docs/cli)
+
 ## Setup
 
-1. **Get a Last.fm API key** — create one for free at
-   [last.fm/api/account/create](https://www.last.fm/api/account/create).
-2. **Deploy this repo to Vercel**:
+1. **Deploy this repo to Vercel**:
    - Fork this repository
    - Go to [vercel.com/new](https://vercel.com/new) and import your fork
    - No build settings needed — Vercel auto-detects the `/api` folder
-3. **Add 2 environment variables** in your Vercel project settings
+2. **Add 2 environment variables** in your Vercel project settings
    (Project → Settings → Environment Variables):
 
    | Name              | Value                        |
@@ -39,7 +51,7 @@ but built for Last.fm, so it can catch and show music playing from Spotify, Band
    | `LASTFM_USERNAME` | your Last.fm username        |
    | `LASTFM_API_KEY`  | the API key from step 1      |
 
-4. Redeploy, then embed the widget URL anywhere:
+3. Redeploy, then embed the widget URL anywhere:
 
    ```md
    ![Now playing](https://your-project.vercel.app/api)
