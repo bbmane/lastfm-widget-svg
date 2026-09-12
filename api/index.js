@@ -96,17 +96,24 @@ function cleanForSearch(title) {
 // iTunes Search API (public, free, no API key required).
 async function fetchItunesArtwork(query, entity = 'song') {
   try {
-    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=${entity}&limit=1`;
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=${entity}&limit=1`;
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`[iTunes] HTTP ${response.status} for "${query}" (${entity})`);
+      return null;
+    }
 
     const data = await response.json();
     const artworkUrl = data.results && data.results[0] && data.results[0].artworkUrl100;
-    if (!artworkUrl) return null;
+    if (!artworkUrl) {
+      console.warn(`[iTunes] No results for "${query}" (${entity})`);
+      return null;
+    }
 
     // artworkUrl100 is 100x100, ask for a bigger version
     return artworkUrl.replace('100x100bb', '400x400bb');
   } catch (err) {
+    console.warn(`[iTunes] Error for "${query}" (${entity}):`, err.message);
     return null;
   }
 }
@@ -119,17 +126,24 @@ async function fetchDeezerArtwork(query, type = 'track') {
   try {
     const url = `https://api.deezer.com/search/${type}?q=${encodeURIComponent(query)}&limit=1`;
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`[Deezer] HTTP ${response.status} for "${query}" (${type})`);
+      return null;
+    }
 
     const data = await response.json();
     const result = data.data && data.data[0];
-    if (!result) return null;
+    if (!result) {
+      console.warn(`[Deezer] No results for "${query}" (${type})`);
+      return null;
+    }
 
     const artworkUrl = type === 'album'
       ? result.cover_big || result.cover_medium
       : result.album && (result.album.cover_big || result.album.cover_medium);
     return artworkUrl || null;
   } catch (err) {
+    console.warn(`[Deezer] Error for "${query}" (${type}):`, err.message);
     return null;
   }
 }
