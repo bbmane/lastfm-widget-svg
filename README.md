@@ -5,7 +5,7 @@ profile README, a personal site, or anywhere else that accepts an
 image URL.
 
 Inspired by [kittinan/spotify-github-profile](https://github.com/kittinan/spotify-github-profile),
-but built for Last.fm, so I can catch and show music playing from Spotify, Bandcamp, Youtube, etc.
+but built for Last.fm, so it can catch and show music playing from Spotify, Bandcamp, Youtube, etc.
 
 ## Features
 
