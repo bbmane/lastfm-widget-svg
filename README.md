@@ -15,8 +15,9 @@ but built for Last.fm, so it can catch and show music playing from Spotify, Band
   nothing is playing
 - Album art is embedded as base64 directly inside the SVG, so it still
   loads on sites that block external image domains (e.g. AniList)
-- Automatically falls back to iTunes artwork when Last.fm has no real
-  cover for a track (common with Bandcamp/SoundCloud scrobbles)
+- Automatically falls back to iTunes and Deezer artwork (searching by
+  track, then by album) when Last.fm has no usable cover — common with
+  scrobbles from Bandcamp/SoundCloud, or for niche/underground artists
 - Fully self-hosted on your own free Vercel account — no third-party
   service holding your data
 
