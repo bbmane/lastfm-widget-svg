@@ -75,6 +75,12 @@ These are only useful if you want to override something on the fly.
 | `border_radius`     | `12`          | Card corner radius in px                                 |
 | `bar_color`         | `B3B3B3`      | Hex without `#` for the equalizer bars                   |
 
+   ```md
+   e.g. ![Now playing](https://lastfm-widget-svg.vercel.app/api?background_color=1a1a1a&border_radius=20&bar_color=ff5555)
+   ```
+
+[<img src='https://lastfm-widget-svg.vercel.app/api?background_color=1a1a1a&border_radius=20&bar_color=ff5555'> ](https://www.last.fm/user/bbmane)
+
 ## (Optional) Local development
 
 ```bash
