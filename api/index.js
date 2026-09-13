@@ -6,6 +6,11 @@ export default async function handler(req, res) {
   const backgroundColor = req.query.background_color || 'transparent';
   const borderRadius = req.query.border_radius || '12';
   const barColor = req.query.bar_color || 'B3B3B3'; // grey, always the same
+  const textColor = req.query.text_color || '6a6a6a';
+  const coverRadius = req.query.cover_radius || '0';
+  const fontSize = clampNumber(req.query.font_size, 17, 10, 40);
+  const width = clampNumber(req.query.width, 460, 200, 1000);
+  const height = clampNumber(req.query.height, 140, 80, 400);
 
   if (!username || !apiKey) {
     return sendErrorSvg(res, 'Missing parameters', backgroundColor, borderRadius);
@@ -59,9 +64,6 @@ export default async function handler(req, res) {
     const displayArtist = isPlaying ? artistName : 'Offline';
     const displaySong = isPlaying ? trackName : 'Currently not playing';
 
-    const width = 460;
-    const height = 140;
-
     res.setHeader('Content-Type', 'image/svg+xml');
     res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=30');
 
@@ -71,6 +73,9 @@ export default async function handler(req, res) {
       backgroundColor,
       borderRadius,
       barColor,
+      textColor,
+      coverRadius,
+      fontSize,
       albumArt: albumArtBase64,
       artistName: displayArtist,
       trackName: displaySong,
@@ -87,6 +92,15 @@ function toCssColor(value) {
   return /^[0-9a-fA-F]{3,8}$/.test(value) ? `#${value}` : value;
 }
 
+// Parses a numeric query param, falling back to a default and clamping to a
+// sane range. Prevents a bad/missing value from breaking the layout (NaN
+// leaking into CSS, absurdly large/small dimensions, etc.).
+function clampNumber(value, fallback, min, max) {
+  const n = parseInt(value, 10);
+  if (isNaN(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
 // Last.fm often returns this exact hash as the "cover art" when the track
 // actually has no image associated with it (very common with scrobbles
 // from Bandcamp/SoundCloud/local files). It should be treated as "no
@@ -101,13 +115,6 @@ function isLastfmPlaceholder(url) {
 // style annotations that Last.fm keeps, so searching with the raw title
 // can miss an otherwise perfectly findable track. Stripping that out
 // before searching noticeably improves the hit rate.
-/*function cleanForSearch(title) {
-  return title
-    .replace(/[([][^)\]]*\b(feat\.?|ft\.?|with|&)\b[^)\]]*[)\]]/gi, '')
-    .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
-    .trim();
-}*/
-
 function cleanArtistForSearch(artist) {
   if (!artist) return '';
   return artist
@@ -188,24 +195,6 @@ async function fetchDeezerArtwork(query, type = 'track') {
 // itself has no match — iTunes and Deezer by album name (Last.fm often
 // knows the album even when the track has no artwork, and album-level
 // search succeeds more often for obscure/underground artists).
-/*async function findArtwork(artist, track, album) {
-  const cleanTrack = cleanForSearch(track);
-
-  const byTrack =
-    (await fetchItunesArtwork(`${artist} ${cleanTrack}`, 'song')) ||
-    (await fetchDeezerArtwork(`${artist} ${cleanTrack}`, 'track'));
-  if (byTrack) return byTrack;
-
-  if (album) {
-    const byAlbum =
-      (await fetchItunesArtwork(`${artist} ${album}`, 'album')) ||
-      (await fetchDeezerArtwork(`${artist} ${album}`, 'album'));
-    if (byAlbum) return byAlbum;
-  }
-
-  return null;
-}*/
-
 async function findArtwork(artist, track, album) {
   const cleanArtist = cleanArtistForSearch(artist);
   const cleanTrack = cleanTrackForSearch(track);
@@ -296,10 +285,26 @@ function fallbackCoverDataUri() {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
-function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albumArt, artistName, trackName, trackUrl, isPlaying }) {
-  const coverSize = 100;
+// The reference layout (460x140) uses a 100px cover. Scaling coverSize
+// proportionally to height keeps that same ratio at other sizes, while
+// clamping it so it never overflows the card's padding or shrinks into
+// nothing on very small/large custom heights.
+function computeCoverSize(height) {
+  const REFERENCE_HEIGHT = 140;
+  const REFERENCE_COVER = 100;
+  const PADDING = 14;
+
+  const scaled = Math.round(height * (REFERENCE_COVER / REFERENCE_HEIGHT));
+  const maxAllowed = height - PADDING * 2;
+  return Math.max(40, Math.min(scaled, maxAllowed));
+}
+
+function buildSvg({ width, height, backgroundColor, borderRadius, barColor, textColor, coverRadius, fontSize, albumArt, artistName, trackName, trackUrl, isPlaying }) {
+  const coverSize = computeCoverSize(height);
   const barsHtml = generateBars(60);
   const bgColor = toCssColor(backgroundColor);
+  const txtColor = toCssColor(textColor);
+  const artistFontSize = fontSize + 3;
 
   return `
     <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-labelledby="cardTitle" role="img">
@@ -330,6 +335,7 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
             height: ${coverSize}px;
             object-fit: cover;
             margin-right: 20px;
+            border-radius: ${coverRadius}px;
           }
 
           .text-container {
@@ -339,9 +345,9 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           }
 
           .artist {
-            color: #6a6a6a;
+            color: ${txtColor};
             font-weight: 700;
-            font-size: 20px;
+            font-size: ${artistFontSize}px;
             line-height: 1.3;
             margin-bottom: 8px;
             white-space: nowrap;
@@ -362,8 +368,8 @@ function buildSvg({ width, height, backgroundColor, borderRadius, barColor, albu
           }
 
           .song {
-            color: #6a6a6a;
-            font-size: 17px;
+            color: ${txtColor};
+            font-size: ${fontSize}px;
             flex: 0 0 auto;
             padding-right: 48px;
           }
