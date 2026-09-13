@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const rawAlbumName = (track.album && track.album['#text']) || '';
     const trackName = escapeXml(rawTrackName);
     const artistName = escapeXml(rawArtistName);
-    const trackUrl = track.url || '#';
+    const trackUrl = escapeXml(track.url || '#');
 
     const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
 
