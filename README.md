@@ -51,7 +51,7 @@ Before you start, you need:
    | Name              | Value                        |
    |-------------------|------------------------------|
    | `LASTFM_USERNAME` | your Last.fm username        |
-   | `LASTFM_API_KEY`  | the API key from step 1      |
+   | `LASTFM_API_KEY`  | the API key                  |
 
 3. Redeploy, then embed the widget URL anywhere:
 
