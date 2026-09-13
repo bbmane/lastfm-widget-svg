@@ -29,30 +29,32 @@ export default async function handler(req, res) {
     const artistName = escapeXml(rawArtistName);
     const trackUrl = track.url || '#';
 
+    const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
+
     let albumArt = track.image && track.image[2] && track.image[2]['#text'];
     let albumArtBase64 = null;
 
-    if (!isLastfmPlaceholder(albumArt)) {
-      albumArtBase64 = await toBase64DataUri(albumArt);
-    }
+    if (isPlaying) {
+      if (!isLastfmPlaceholder(albumArt)) {
+        albumArtBase64 = await toBase64DataUri(albumArt);
+      }
 
-    // Either Last.fm had no image at all, or it gave us a URL that looked
-    // valid but failed to actually download (404, broken CDN entry, etc.)
-    // — either way, try the search fallbacks before giving up.
-    if (!albumArtBase64) {
-      const foundArt = await findArtwork(rawArtistName, rawTrackName, rawAlbumName);
-      if (foundArt) {
-        albumArtBase64 = await toBase64DataUri(foundArt);
+      // Either Last.fm had no image at all, or it gave us a URL that looked
+      // valid but failed to actually download (404, broken CDN entry, etc.)
+      // — either way, try the search fallbacks before giving up.
+      if (!albumArtBase64) {
+        const foundArt = await findArtwork(rawArtistName, rawTrackName, rawAlbumName);
+        if (foundArt) {
+          albumArtBase64 = await toBase64DataUri(foundArt);
+        }
       }
     }
 
-    // Nothing worked: locally generated placeholder (no network involved,
-    // can never fail).
+    // Offline, or nothing worked: locally generated placeholder (no
+    // network involved, can never fail).
     if (!albumArtBase64) {
       albumArtBase64 = fallbackCoverDataUri();
     }
-
-    const isPlaying = !!(track['@attr'] && track['@attr'].nowplaying === 'true');
 
     const displayArtist = isPlaying ? artistName : 'Offline';
     const displaySong = isPlaying ? trackName : 'Currently not playing';
