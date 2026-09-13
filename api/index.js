@@ -197,10 +197,25 @@ async function findArtwork(artist, track, album) {
 // browser. Checking the real magic bytes at the start of the file is a
 // much more reliable signal than the header.
 function detectImageMimeType(buffer) {
-  if (buffer.length < 12) return null;
+  if (buffer.length < 500) return null; // too small to be a real cover, likely an error page or a truncated stub
 
-  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
-  if (buffer.toString('hex', 0, 8) === '89504e470d0a1a0a') return 'image/png';
+  const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  if (isJpeg) {
+    // JPEGs must end with an End Of Image marker (FF D9). If it's
+    // missing, the download was cut short mid-transfer — the start
+    // decodes fine but the image is corrupt/incomplete, which is
+    // exactly what shows up as a broken-image icon in the browser.
+    const lastTwo = buffer.subarray(-2);
+    const hasEoiMarker = lastTwo[0] === 0xff && lastTwo[1] === 0xd9;
+    return hasEoiMarker ? 'image/jpeg' : null;
+  }
+
+  if (buffer.toString('hex', 0, 8) === '89504e470d0a1a0a') {
+    // PNGs must end with the IEND chunk
+    const tail = buffer.subarray(-12).toString('ascii');
+    return tail.includes('IEND') ? 'image/png' : null;
+  }
+
   if (buffer.toString('ascii', 0, 3) === 'GIF') return 'image/gif';
   if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
 
@@ -219,7 +234,7 @@ async function toBase64DataUri(url) {
 
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
     const realMimeType = detectImageMimeType(buffer);
-    if (!realMimeType) throw new Error('Response body is not a recognizable image (bad/corrupt data)');
+    if (!realMimeType) throw new Error(`Response body is not a valid/complete image (${buffer.length} bytes)`);
 
     return `data:${realMimeType};base64,${buffer.toString('base64')}`;
   } catch (err) {
