@@ -111,7 +111,8 @@ function isLastfmPlaceholder(url) {
 function cleanArtistForSearch(artist) {
   if (!artist) return '';
   return artist
-    .replace(/\s+(&|feat\.?|ft\.?|with)\s+/gi, ', ')
+    .replace(/\s*&\s*/g, ', ') 
+    .replace(/\s+feat\.?|ft\.?|with\s+/gi, ', ')
     .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -120,6 +121,7 @@ function cleanArtistForSearch(artist) {
 function cleanTrackForSearch(title) {
   if (!title) return '';
   return title
+    .replace(/\s*&\s*/g, ' and ')
     .replace(/[([][^)\]]*\b(feat\.?|ft\.?|with)\b[^)\]]*[)\]]/gi, '')
     .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
     .replace(/\s+/g, ' ')
