@@ -168,7 +168,7 @@ async function fetchDeezerArtwork(query, type = 'track') {
 // itself has no match — iTunes and Deezer by album name (Last.fm often
 // knows the album even when the track has no artwork, and album-level
 // search succeeds more often for obscure/underground artists).
-async function findArtwork(artist, track, album) {
+/*async function findArtwork(artist, track, album) {
   const cleanTrack = cleanForSearch(track);
 
   const byTrack =
@@ -180,6 +180,29 @@ async function findArtwork(artist, track, album) {
     const byAlbum =
       (await fetchItunesArtwork(`${artist} ${album}`, 'album')) ||
       (await fetchDeezerArtwork(`${artist} ${album}`, 'album'));
+    if (byAlbum) return byAlbum;
+  }
+
+  return null;
+}*/
+
+async function findArtwork(artist, track, album) {
+  const cleanArtist = cleanForSearch(artist);
+  const cleanTrack = cleanForSearch(track);
+  const cleanAlbum = album ? cleanForSearch(album) : null;
+
+  const trackQuery = `${cleanArtist} ${cleanTrack}`.trim();
+  
+  const byTrack =
+    (await fetchItunesArtwork(trackQuery, 'song')) ||
+    (await fetchDeezerArtwork(trackQuery, 'track'));
+  if (byTrack) return byTrack;
+
+  if (cleanAlbum) {
+    const albumQuery = `${cleanArtist} ${cleanAlbum}`.trim();
+    const byAlbum =
+      (await fetchItunesArtwork(albumQuery, 'album')) ||
+      (await fetchDeezerArtwork(albumQuery, 'album'));
     if (byAlbum) return byAlbum;
   }
 
