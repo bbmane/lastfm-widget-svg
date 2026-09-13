@@ -68,18 +68,23 @@ Before you start, you need:
 All of these are optional — set the env vars above and you're done.
 These are only useful if you want to override something on the fly.
 
-| Parameter          | Default       | Description                                            |
-|---------------------|---------------|--------------------------------------------------------|
-| `username`          | env var       | Last.fm username to look up                             |
-| `background_color`  | `transparent` | Hex without `#` (e.g. `121212`) or a CSS keyword         |
-| `border_radius`     | `12`          | Card corner radius in px                                 |
-| `bar_color`         | `B3B3B3`      | Hex without `#` for the equalizer bars                   |
+| Parameter          | Default       | Description                                                        |
+|---------------------|---------------|---------------------------------------------------------------------|
+| `username`          | env var       | Last.fm username to look up                                         |
+| `background_color`  | `transparent` | Hex without `#` (e.g. `121212`) or a CSS keyword                     |
+| `border_radius`     | `12`          | Card corner radius in px                                             |
+| `bar_color`         | `B3B3B3`      | Hex without `#` for the equalizer bars                               |
+| `text_color`        | `6a6a6a`      | Hex without `#` for the artist/track text                            |
+| `cover_radius`      | `0`           | Album cover corner radius in px                                      |
+| `width`             | `460`         | Card width in px (200–1000)                                          |
+| `height`            | `140`         | Card height in px (80–400) — the cover art scales proportionally     |
+| `font_size`         | `17`          | Track title font size in px (10–40); artist name is +3px             |
 
    ```md
-   e.g. ![Now playing](https://lastfm-widget-svg.vercel.app/api?background_color=1a1a1a&border_radius=20&bar_color=ff5555)
+   e.g. How to use: ![Now playing](https://lastfm-widget-svg.vercel.app/api?background_color=1a1a1a&border_radius=20&bar_color=ff5555)
    ```
 
-[<img src='https://lastfm-widget-svg.vercel.app/api?background_color=1a1a1a&border_radius=20&bar_color=ff5555'> ](https://www.last.fm/user/bbmane)
+[<img src='https://lastfm-widget-svg.vercel.app/api?background_color=6a6a6a&border_radius=20&bar_color=1a1a1a&text_color=1a1a1a'> ](https://www.last.fm/user/bbmane)
 
 ## (Optional) Local development
 
