@@ -190,6 +190,23 @@ async function findArtwork(artist, track, album) {
 // embedded directly inside the SVG instead of being an external link
 // (useful for sites like AniList that block images from third-party
 // domains).
+// Some CDNs (Bandcamp's included) occasionally respond with a
+// content-type header that claims to be an image while the body is
+// actually an error page or truncated data. Trusting the header alone
+// can embed corrupt bytes that show up as a broken-image icon in the
+// browser. Checking the real magic bytes at the start of the file is a
+// much more reliable signal than the header.
+function detectImageMimeType(buffer) {
+  if (buffer.length < 12) return null;
+
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.toString('hex', 0, 8) === '89504e470d0a1a0a') return 'image/png';
+  if (buffer.toString('ascii', 0, 3) === 'GIF') return 'image/gif';
+  if (buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+
+  return null;
+}
+
 async function toBase64DataUri(url) {
   try {
     if (!url) throw new Error('Empty URL');
@@ -200,11 +217,11 @@ async function toBase64DataUri(url) {
 
     if (!imgResponse.ok) throw new Error(`HTTP ${imgResponse.status}`);
 
-    const contentType = imgResponse.headers.get('content-type') || '';
-    if (!contentType.startsWith('image/')) throw new Error('Response is not an image');
-
     const buffer = Buffer.from(await imgResponse.arrayBuffer());
-    return `data:${contentType};base64,${buffer.toString('base64')}`;
+    const realMimeType = detectImageMimeType(buffer);
+    if (!realMimeType) throw new Error('Response body is not a recognizable image (bad/corrupt data)');
+
+    return `data:${realMimeType};base64,${buffer.toString('base64')}`;
   } catch (err) {
     console.warn(`[Cover download] Failed for "${url}":`, err.message);
     return null;
