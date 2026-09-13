@@ -101,10 +101,28 @@ function isLastfmPlaceholder(url) {
 // style annotations that Last.fm keeps, so searching with the raw title
 // can miss an otherwise perfectly findable track. Stripping that out
 // before searching noticeably improves the hit rate.
-function cleanForSearch(title) {
+/*function cleanForSearch(title) {
+  return title
+    .replace(/[([][^)\]]*\b(feat\.?|ft\.?|with|&)\b[^)\]]*[)\]]/gi, '')
+    .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
+    .trim();
+}*/
+
+function cleanArtistForSearch(artist) {
+  if (!artist) return '';
+  return artist
+    .replace(/\s+(&|feat\.?|ft\.?|with)\s+/gi, ', ')
+    .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanTrackForSearch(title) {
+  if (!title) return '';
   return title
     .replace(/[([][^)\]]*\b(feat\.?|ft\.?|with)\b[^)\]]*[)\]]/gi, '')
     .replace(/[([][^)\]]*\b(remix|remaster(ed)?|live|edit|version)\b[^)\]]*[)\]]/gi, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -187,9 +205,9 @@ async function fetchDeezerArtwork(query, type = 'track') {
 }*/
 
 async function findArtwork(artist, track, album) {
-  const cleanArtist = cleanForSearch(artist);
-  const cleanTrack = cleanForSearch(track);
-  const cleanAlbum = album ? cleanForSearch(album) : null;
+  const cleanArtist = cleanArtistForSearch(artist);
+  const cleanTrack = cleanTrackForSearch(track);
+  const cleanAlbum = album ? cleanTrackForSearch(album) : null;
 
   const trackQuery = `${cleanArtist} ${cleanTrack}`.trim();
   
